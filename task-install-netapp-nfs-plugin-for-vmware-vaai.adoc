@@ -1,0 +1,428 @@
+---
+permalink: task-install-netapp-nfs-plugin-for-vmware-vaai.html 
+sidebar: sidebar 
+keywords: install, netapp, nfs, plug-in, vmware, vaai, involve, enable, netapp, vstorage, api, array, integration, installation, download, nfsv4.1 
+summary: NFS Plug-in のインストールでは、ネットアップストレージシステムで VMware vStorage for NFS を有効にし、 VMware ホストで VMware vStorage APIs for Array Integration （ VAAI ）が有効になっていることを確認してから、プラグインをダウンロードして VMware ESXi ホストにインストールし、インストールが正常に完了したことを確認します。 
+---
+= NetApp NFS Plug-in for VMware VAAI をインストール
+:icons: font
+:imagesdir: ./media/
+
+
+[role="lead"]
+NFS Plug-in のインストールでは、ネットアップストレージシステムで VMware vStorage for NFS を有効にし、 VMware ホストで VMware vStorage APIs for Array Integration （ VAAI ）が有効になっていることを確認してから、プラグインをダウンロードして VMware ESXi ホストにインストールし、インストールが正常に完了したことを確認します。
+
+.作業を開始する前に
+* ストレージシステムで NFSv3 または NFSv4.1 が有効になっている必要があります。
++
+
+NOTE: NFSv4.1 は ONTAP 9.0 のシステムでのみ使用でき、 NFSv3 は 7-Mode と clustered Data ONTAP のシステムで使用できます。
+
+* VMware vSphere 7.0U1 が使用可能である必要があります。
+
+
+NFS の有効化と VMware vSphere の使用については、に記載されているマニュアルを参照してください追加情報 <<step10,手順 10>>。
+
+.このタスクについて
+* VMware ESXi CLI を使用してプラグインをインストールする場合は、から始めてください <<step1,手順 1.>>。
+* Virtual Storage Console for VMware vSphere （ VSC ）を使用してプラグインをインストールする場合は、から始めてください <<step3,手順 3>>。
++
+VSC を使用すると、ストレージコントローラで VMware vStorage for NFS が有効になり、 ESXi ホストで VAAI を有効にする手順を次に示します <<step1,1.>> から <<step2,2.>> を使用してください。手順
+
+* VMware vSphere 用の ONTAP ツールを使用してプラグインをインストールする場合は、から始めてください <<step3,手順 3>>。
+
+
+* 使用する IP アドレスの表記規則： *
+
+* 192.168.42.2xx の形式の IP アドレスは、 ESXi サーバの VMkernel ポートです。
+* 192.168.42.6x の形式の IP アドレスは、 Data ONTAP 7-Mode を実行しているシステムです。
+* 192.168.42.8x の形式の IP アドレスは、 ONTAP システム上の Storage Virtual Machine （ SVM 、旧 Vserver ）を指します。
+
+
+.手順
+. [stedp1] VMware vStorage for NFS を有効にします。
++
+[cols="30,60"]
+|===
+| インターフェイス | 作業 
+
+
+ a| 
+ONTAP CLI
+ a| 
+SVM で VMware vStorage for NFS を有効にします。 vserver nfs modify – vserver vserver_name -vStorage enabled `<vserver_name>` は、 SVM の名前です。
+
+
+
+ a| 
+7-Mode CLI のこと
+ a| 
+ストレージ・システム上で VMware vStorage for NFS を有効にします options nfs.vstorage.enable on
+
+
+
+ a| 
+vFiler ユニット用の 7-Mode CLI
+ a| 
+VMware NFS データストアをホストする MultiStore vFiler ユニットで、 NetApp NFS Plug-in vStorage for NFS のインストールを有効にします。 vfiler run vfiler_name options nfs.vstorage.enable on `
+
+|===
+. [step2] VAAI が各 ESXi ホストで有効になっていることを確認します。
++
+VMware vSphere 5.0 以降では、 VAAI はデフォルトで有効になっています。
+
++
+[cols="30,60"]
+|===
+| インターフェイス | 作業 
+
+
+ a| 
+VMware ESXi CLI
+ a| 
+.. VAAI が有効になっていることを確認します。 esxcfg-advcfg -g /DataMover.HardwareAcceleratedMove `esxcfg-advcfg -g /DataMover.HardwareAcceleratedInit`
++
+VAAI が有効な場合、次のような出力が表示されます。
+
++
+[listing]
+----
+~ #  esxcfg-advcfg -g /DataMover/HardwareAcceleratedMove
+Value of HardwareAcceleratedMove is **1**
+~ # esxcfg-advcfg -g /DataMover/HardwareAcceleratedInit
+Value of HardwareAcceleratedInit is **1**
+----
+.. VAAI が有効になっていない場合は、 VAAI を有効にします。 esxcfg-advcfg -s 1/DataMover.HardwareAcceleratedInit `esxcfg-advcfg-s 1/DataMover.HardwareAcceleratedMove
++
+これらのコマンドの出力は次のとおりです。
+
++
+[listing]
+----
+~ # esxcfg-advcfg -s 1 /DataMover/HardwareAcceleratedInit
+Value of HardwareAcceleratedInit is **1**
+~ #  esxcfg-advcfg -s 1 /DataMover/HardwareAcceleratedMove
+Value of HardwareAcceleratedMove is **1**
+----
+
+
+
+
+ a| 
+vSphere Client の各機能を使用
+ a| 
+.. vCenter Server にログインします。
+.. 各 ESXi サーバのサーバ名をクリックします。
+.. 設定タブのソフトウェアセクションで、 * 詳細設定 * をクリックします。
+.. 「 *DataMover.HardwareAcceleratedMove 」パラメータと「 DataMover.HardwareAcceleratedInit 」パラメータが 1 に設定されていることを確認します。
+
+
+|===
+. [[step3]] NetApp NFS Plug-in for VMware VAAI をダウンロードします。
++
+.. のダウンロードページに移動します https://mysupport.netapp.com/site/products/all/details/nfsplugin-vmware-vaai/downloads-tab["NetApp NFS Plug-in for VMware VAAI のダウンロードページ"^]。
+.. 2.0 および vSphere 7.0U1 以降の最新のソフトウェアリリースをダウンロードします。
+
+
+. 次のコマンドを使用して、 ESXi ホストにプラグインをインストールします。
++
+esxcli software component apply -d /<tmp>/< 一部のパス >/< ダウンロードプラグインファイルバージョン >.zip
+
++
+ここで '<se_path>` はダウンロードしたファイルの場所へのパスで '<downloaded-plugin-file-version >' はダウンロードしたファイルの名前です
+
+. 次のコマンドを実行してインストールを完了します。
++
+/etc/init.d/VAAI-NASD start
+
++
+/etc/init.d/VAAI-NASD STOP
+
+. VMware ESXi コマンドラインで、ホストにプラグインが正しくインストールされたことを確認します。
++
+esxcli software component list'
+
++
+インストールとリブートが完了するとプラグインは自動的に機能します。
+
++
+これらのコマンドを使用することにより、コンポーネントは、 7.0x 以降から入手可能な vSphere の新しい VLCM 機能と互換性を維持できます。
+
+. プラグインをインストールするホストシステムが新規の場合、または ONTAP を実行するサーバが新規に構成されている場合は、ルートボリュームおよび VAAI AT を使用する ESXi サーバ上の各 NFS データストアボリュームに対して、エクスポートポリシールールを作成または変更します link:task-configure-export-policies-for-clustered-data-ontap-to-allow-vaai-over-nfs.html["ONTAP で NFS 経由の VAAI を許可するエクスポートポリシーを設定します"]。
++
+Data ONTAP 7-Mode を使用している場合はこの手順をスキップします。
+
++
+エクスポートポリシーを使用することにより、ボリュームへのアクセスを特定のクライアントだけに制限することができます。VAAI コピーオフロードが機能するためにはエクスポートポリシーで NFSv4 が有効になっている必要があるため、 SVM のデータストアボリューム用のエクスポートポリシールールの変更が必要になる場合があります。データストアで NFS 以外のプロトコルを使用している場合は、エクスポートルールに NFS を設定することでそれらのプロトコルが削除されないことを確認してください。
+
++
+[cols="30,60"]
+|===
+| を使用する場合 | 作業 
+
+
+ a| 
+ONTAP CLI
+ a| 
+VAAI を使用する ESXi サーバの各エクスポートポリシールールで、「 nfs 」をアクセスプロトコルとして設定します。 vserver export-policy rule modify -vserver vs1 -policyname mypolicy-ruleindex 1 -protocol nfs -rwrule krb5 | krb5i | any -rorule krb5 | krb5i | any ’
+
+次の例では、
+
+** 「 vs1 」は SVM の名前です。
+** 「 mypolicy 」は、エクスポートポリシーの名前です。
+** 「 1 」はルールのインデックス番号です。
+** 「 nfs 」には、 NFSv3 プロトコルと NFSv4 プロトコルが含まれています。
+** RO （読み取り専用）と RW （読み取り / 書き込み）のセキュリティ形式は、 krb5 、 krb5i 、または any のいずれかです。
++
+[listing]
+----
+cluster1::> vserver export-policy rule modify -vserver vs1
+-policyname mypolicy -ruleindex 1 -protocol nfs -rwrule krb5|krb5i|any -rorule krb5|krb5i|any
+----
+
+
+
+
+ a| 
+ONTAP システムマネージャ
+ a| 
+.. [ ホーム ] タブで、適切なクラスタをダブルクリックします。
+.. 左側のナビゲーションペインで、 Storage Virtual Machine （ SVM ）の階層を展開します。
++
+
+NOTE: System Manager 3.1 よりも前のバージョンを使用している場合、 Storage Virtual Machine ではなく Vserver と表示されます。
+
+.. ナビゲーションペインで、 VAAI 対応データストアがある Storage Virtual Machine （ SVM ）を選択し、 * Policies * > * Export Policies * をクリックします。
+.. [ エクスポートポリシー ] ウィンドウで、エクスポートポリシーを展開し、ルールインデックスを選択します。
++
+ユーザインターフェイスには、データストアで VAAI が有効かどうかは示されません。
+
+.. * Modify Rule * をクリックして、 Modify Export Rule ダイアログボックスを表示します。
+.. [ * アクセスプロトコル * ] で [* NFS* ] を選択して、すべてのバージョンの NFS を有効にします。
+.. [OK] をクリックします。
+
+
+|===
+. Data ONTAP 7-Mode を使用している場合は、「 exportfs 」コマンドを実行してボリューム・パスをエクスポートします。
++
+ONTAP を使用している場合は、この手順を省略してください。
+
++
+「 exportfs 」コマンドの詳細については、を参照してください https://library.netapp.com/ecm/ecm_download_file/ECMP1401220["『 Data ONTAP 8.2 File Access and Protocols Management Guide for 7-Mode 』"^]。
+
++
+ボリュームをエクスポートする際には、ホスト名または IP アドレス、サブネット、ネットグループを指定できます。IP アドレス ' サブネット ' またはホストを 'rw' オプションと 'root' オプションの両方に指定できます例：
+
++
+[listing]
+----
+sys1> exportfs -p root=192.168.42.227 /vol/VAAI
+----
++
+コロンで区切って複数指定することもできます。例：
+
++
+[listing]
+----
+sys1> exportfs -p root=192.168.42.227:192.168.42.228 /vol/VAAI
+----
++
+actual フラグを使用してボリュームをエクスポートする場合、コピーオフロードが正しく機能するためにはエクスポートパスにコンポーネントを 1 つだけ指定する必要があります。例：
+
++
+[listing]
+----
+sys1> exportfs -p actual=/vol/VAAI,root=192.168.42.227 /VAAI-ALIAS
+----
++
+
+NOTE: エクスポートパスに複数のコンポーネントを指定した場合、コピーオフロードは機能しません。
+
+. ESXi ホストに NFSv3 または NFSv4.1 のデータストアをマウントします。
++
+.. NFSv3 のデータストアをマウントするには、次のコマンドを実行します。
++
+esxcli storage nfs add -H 192.168.42.80 -s share_name -v volume_name
+
++
+NFSv4.1 データストアをマウントするには、次のコマンドを実行します。
+
++
+esxcli storage nfs41 add -H 192.168.42.80 -s share_name -v volume_name -A AUTH_SYS AUTH_SYS SYS/SEC_krb5/SEC_krb5i ’
+
++
+次の例は、データストアをマウントするために ONTAP で実行するコマンドとその出力を示しています。
+
++
+[listing]
+----
+~ # esxcfg-nas -a onc_src -o 192.168.42.80 -s /onc_src
+Connecting to NAS volume: onc_src
+/onc_src created and connected.
+----
++
+Data ONTAP 7-Mode を実行しているシステムでは、「 /vol/ 」プレフィックスが NFS ボリューム名の前に付加されます。次の例は、データストアをマウントするための 7-Mode のコマンドとその出力を示しています。
+
++
+[listing]
+----
+~ # esxcfg-nas -a vms_7m -o 192.168.42.69 -s /vol/vms_7m
+Connecting to NAS volume: /vol/vms_7m
+/vol/vms_7m created and connected.
+----
+.. NAS マウントを管理するには、次のコマンド
++
+esxcfg-nas -l
+
++
+次の出力が表示されます。
+
++
+[listing]
+----
+VMS_vol103 is /VMS_vol103 from 192.168.42.81 mounted available
+VMS_vol104 is VMS_vol104 from 192.168.42.82 mounted available
+dbench1 is /dbench1 from 192.168.42.83 mounted available
+dbench2 is /dbench2 from 192.168.42.84 mounted available
+onc_src is /onc_src from 192.168.42.80 mounted available
+----
+
+
++
+完了すると、ボリュームがマウントされ、 /vmfs/volumes ディレクトリで使用できるようになります。
+
+. [[step10] ] 次のいずれかの方法を使用して、マウントされたデータストアで VAAI がサポートされていることを確認します。
++
+[cols="30,60"]
+|===
+| を使用する場合 | 作業 
+
+
+ a| 
+ESXi CLI
+ a| 
+vmkfstools -ph/vmfs/volumes/OC_src/ ` 次の出力が表示されます。
+
+[listing]
+----
+NFS-1.00 file system spanning 1 partitions.
+File system label (if any):
+onc_src Mode: public Capacity 760 MB, 36.0 MB available,
+file block size 4 KB
+UUID: fb9cccc8-320a99a6-0000-000000000000
+Partitions spanned (on "notDCS"):
+
+nfs:onc_src
+NAS VAAI Supported: YES
+Is Native Snapshot Capable: YES
+~ #
+----
+
+
+ a| 
+vSphere Client の各機能を使用
+ a| 
+.. ESXi Server * > * Configuration * > * Storage * をクリックします。
+.. VAAI が有効な NFS データストアの Hardware Acceleration 列を確認します。
+
+
+|===
++
+NFS での VMware vStorage の詳細については、次のドキュメントを参照してください。
+
++
+http://docs.netapp.com/ontap-9/topic/com.netapp.doc.cdot-famg-nfs/home.html["ONTAP 9 NFS のリファレンスガイドの概要"^]
+
++
+https://library.netapp.com/ecm/ecm_download_file/ECMP1401220["『 Data ONTAP 8.2 File Access and Protocols Management Guide for 7-Mode 』"^]
+
++
+ボリュームおよびボリュームのスペースの設定の詳細については、次のドキュメントを参照してください。
+
++
+http://docs.netapp.com/ontap-9/topic/com.netapp.doc.dot-cm-vsmg/home.html["CLI による論理ストレージ管理の概要"^]
+
++
+link:https://library.netapp.com/ecm/ecm_download_file/ECMP1368859["『 Data ONTAP 8.2 Storage Management Guide for 7-Mode 』"^]
+
++
+vCenter Web Client GUI を使用して複数のホストにプラグインをインストールおよび管理する場合にも使用できる VMware vSphere Lifecycle Manager の詳細については、次を参照してください。
+
++
+link:https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere-lifecycle-manager.doc/GUID-74295A37-E8BB-4EB9-BFBA-47B78F0C570D.html["VMware vSphere Lifecycle Manager について"^]
+
++
+VMware 環境での VSC を使用した NFS データストアのプロビジョニングと仮想マシンのクローンの作成については、次のドキュメントを参照してください。
+
++
+link:https://library.netapp.com/ecmdocs/ECMLP2561116/html/index.html["Virtual Storage Console 6.2.1 for VMware vSphere インストレーションアドミニストレーションガイド"^]
+
++
+VMware vSphere 用の ONTAP ツールを使用して NFS データストアをプロビジョニングし、 VMware 環境で仮想マシンのクローンを作成する方法の詳細については、次のドキュメントを参照してください。
+
++
+link:https://docs.netapp.com/vapp-98/topic/com.netapp.doc.vsc-dsg/home.html["VMware vSphere ドキュメント用の ONTAP ツール"^]
+
++
+NFS データストアの操作とクローニング処理の詳細については、次のトピックを参照してください。
+
++
+link:http://pubs.vmware.com/vsphere-60/topic/com.vmware.ICbase/PDF/vsphere-esxi-vcenter-server-60-storage-guide.pdf["VMware vSphere Storage の略"^]
+
+. Data ONTAP 7-Mode を使用している場合は、「 sis on 」コマンドを実行して、データストアボリュームでコピーオフロードと重複排除を有効にします。
++
+ONTAP の場合は、ボリュームの効率化の詳細を表示します。
+
++
+volume efficiency show -vserver vserver_name -volume volume_name
+
++
+
+NOTE: AFF （ AFF ）システムでは、ボリュームの効率化がデフォルトで有効になっています。
+
++
+コマンド出力に Storage Efficiency が有効になったボリュームが表示されない場合は、効率化を有効にします。
+
++
+「 volume efficiency on -vserver vserver_name -volume volume_name 」を参照してください
+
++
+VSC または VMware vSphere の ONTAP ツールを使用してボリュームを設定する場合は、この手順をスキップします。これは、データストアでボリュームの効率化がデフォルトで有効になっているためです。
+
++
+[listing]
+----
+sys1> volume efficiency show
+This table is currently empty.
+
+sys1> volume efficiency on -volume  testvol1
+Efficiency for volume "testvol1" of Vserver "vs1" is enabled.
+
+sys1> volume efficiency show
+Vserver    Volume           State    Status       Progress           Policy
+---------- ---------------- -------- ------------ ------------------ ----------
+vs1        testvol1         Enabled  Idle         Idle for 00:00:06  -
+----
++
+データストアボリュームでの重複排除の有効化の詳細については、次のドキュメントを参照してください。
+
++
+http://docs.netapp.com/ontap-9/topic/com.netapp.doc.dot-cm-vsmg/home.html["CLI による論理ストレージ管理の概要"^]
+
++
+https://library.netapp.com/ecm/ecm_download_file/ECMP1401220["『 Data ONTAP 8.2 File Access and Protocols Management Guide for 7-Mode 』"^]
+
+
+
+NFS Plug-in のスペースリザベーションやコピーオフロードの機能を使用することで、日常的な作業を効率化することができます。
+
+* ネットアップのトラディショナルボリュームや FlexVol ボリュームにシック仮想マシンディスク（ VMDK ）形式の仮想マシンを作成し、作成時にファイルのスペースを確保します。
+* ネットアップのボリューム内またはボリューム間で既存の仮想マシンをクローニングします。
++
+** 同じノードの同じ SVM 上のボリュームであるデータストア。
+** 異なるノードの同じ SVM 上のボリュームであるデータストア。
+** 同じ 7-Mode システムまたは vFiler ユニット上のボリュームであるデータストア。
+
+
+* クローニング処理を実行します。 ESXi ホストを経由する必要がないため、 VAAI を使用しない場合よりも処理時間が短縮されます。
+

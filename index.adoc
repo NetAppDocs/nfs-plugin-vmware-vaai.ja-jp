@@ -1,0 +1,13 @@
+---
+permalink: index.html 
+sidebar: sidebar 
+keywords: installation, guide, nfs, vaai, vmware, esxi, plug-in 
+summary: ESXi ホストにインストールされた VMware 仮想ディスクライブラリを統合するソフトウェアライブラリ。 
+---
+= NetApp NFS Plug-in for VMware VAAI のドキュメント
+:icons: font
+:imagesdir: ./media/
+
+
+[role="lead"]
+このプラグインを使用すると、クローニング処理のパフォーマンスが向上し、処理時間が短縮されます。また、 ESXi ホストにインストールされた VMware 仮想ディスクライブラリを統合するソフトウェアライブラリも用意されています。

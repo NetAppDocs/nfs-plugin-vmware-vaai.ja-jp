@@ -1,0 +1,182 @@
+---
+permalink: task-configure-export-policies-for-clustered-data-ontap-to-allow-vaai-over-nfs.html 
+sidebar: sidebar 
+keywords: configure, export, policies, policy, compliance, vmware, vstorage, api, array, integration, vaai, storage, feature, nfs, server, ontap, svm, vserver, vstorage 
+summary: NFS サーバ経由の VMware vStorage APIs for Array Integration （ VAAI ）のストレージ機能をネットアップのストレージで使用できるようにするためには、エクスポートポリシーを設定する必要があります。ONTAP では、 Storage Virtual Machine （ SVM 、旧 Vserver ）に適用されているエクスポートポリシーによってボリュームエクスポートが制限されます。 
+---
+= ONTAP で NFS 経由の VAAI を許可するエクスポートポリシーを設定します
+:icons: font
+:imagesdir: ./media/
+
+
+[role="lead"]
+NFS サーバ経由の VMware vStorage APIs for Array Integration （ VAAI ）のストレージ機能をネットアップのストレージで使用できるようにするためには、エクスポートポリシーを設定する必要があります。ONTAP では、 Storage Virtual Machine （ SVM 、旧 Vserver ）に適用されているエクスポートポリシーによってボリュームエクスポートが制限されます。
+
+.作業を開始する前に
+* 該当する NFS ボリュームで NFSv4 の呼び出しが許可されている必要があります。
+* root ユーザがプライマリユーザとして設定されている必要があります。
+* 相互接続されたすべての親ボリュームで NFSv4 が許可されている必要があります。
+* 該当する NFS サーバで VAAI をサポートするオプションが設定されている必要があります。
+
+
+エクスポートポリシーは、状況やプロトコルに応じて複数設定することができます。
+
+.手順
+. エクスポートポリシーを作成していない場合は、 VMware ESXi ホストのルートボリュームにある SVM を対象に、 SVM 名、ポリシー名、デフォルトのルールインデックス、プロトコルなどを指定して作成します。
++
+vserver export-policy rule modify -vserver vserver name> -policyname default -ruleindex rule index -protocol nfsv3\|nfsv4`
+
+. 次の内容で、エクスポートポリシーを変更して NFSv3 と NFSv4 の両方のプロトコルを許可します。
++
+** 該当する ESX サーバおよびボリュームについて、関連するすべてのアクセス権限を指定したエクスポートポリシールールを設定しておく必要があります。
+** クライアント一致のために 'rw'ro' および Superuser の値を SYS または ANY に設定しておく必要があります
+** NFSv3 プロトコルと NFSv4 プロトコルを許可しておく必要があります。
++
+エクスポートポリシーでは、次のようにアクセスプロトコルを設定します。
+
++
+*** Access Protocol= 'NFS' （ NFS のすべてのバージョンを含む）
+*** アクセスプロトコル = 「 nfsv3 」、「 nfsv4 」（ NFSv3 データストアアクセスの場合は nfsv3 ）、および NFSv4 （ NFSv4.1 データストアアクセスの場合は nfsv4 ）です。
++
+次のコマンドは、 SVM の詳細を表示し、エクスポートポリシーを設定します。
+
++
+[listing]
+----
+cm3240c-rtp::> vol show -vserver vmware -volume vmware_VAAI -fields policy (volume
+show)
+vserver volume       policy         junction-path
+------- ------       -------        -------------
+vmware  vmware_VAAI  vmware_access  /VAAI
+----
+
+
++
+[listing]
+----
+cm3240c-rtp::> export-policy rule show -vserver vmware -policyname vmware_access-ruleindex 2(vserver export-policy rule show)
+
+Vserver: vmware
+Policy Name: vmware_access
+Rule Index: 1
+Access Protocol: nfs3,nfs4 (can also be nfs for NFSv3)
+Client Match Spec: 192.168.1.6
+RO Access Rule: sys
+RW Access Rule: sys
+User ID To Which Anonymous Users Are Mapped: 65534
+Superuser Security Flavors: sys
+Honor SetUID Bits In SETATTR: true
+Allow Creation of Devices: true
+----
+
+
++
+ポリシーへの変更は、 NFS データストアのボリュームだけでなく、そのポリシーを使用するすべてのボリュームに適用されます。
+
+. 次の内容で、エクスポートポリシーを変更して Superuser を SYS に設定します。
++
+** ジャンクションパス内のすべての親ボリュームについて、ルートボリュームへの読み取りアクセス権限、 NFSv4 アクセス、およびジャンクションボリュームへの VAAI アクセスを設定します。
++
+関連するクライアントについて、 SVM のルートボリュームの Superuser を SYS に設定します。
+
+** SVM のルートボリュームへの書き込みアクセス権限を拒否します。次のコマンドは、 SVM の詳細を表示し、エクスポートポリシーを設定します。
++
+[listing]
+----
+cm3240c-rtp::> vol show -vserver vmware -volume vmware_root -fields policy,
+junction-path (volume show)
+vserver volume policy  junction-path
+------- ------ ------- -------------
+vmware  vmware_root  root_policy /
+----
++
+[listing]
+----
+
+cm3240c-rtp::> export-policy rule show -vserver vmware -policyname root_policy
+-ruleindex 1 (vserver export-policy rule show)
+
+Vserver: vmware
+Policy Name: root_policy
+Rule Index: 1
+Access Protocol: nfs  <--- as in scenario 1, set to nfs or nfs3,nfs4
+Client Match Spec: 192.168.1.5
+RO Access Rule: sys
+RW Access Rule: never  <--- this can be never for security reasons
+User ID To Which Anonymous Users Are Mapped: 65534
+Superuser Security Flavors: sys   <--- this is required for VAAI to be set, even
+in the parent volumes like vsroot
+Honor SetUID Bits In SETATTR: true
+Allow Creation of Devices: true
+----
++
+Superuser が SYS に設定されているため、 root ユーザが保持されます。そのため、 root ユーザはジャンクションパス /VAAI のボリュームにアクセスできます。
+
++
+ルートボリュームと vmware_VAAI ボリュームの間のジャンクションに他のボリュームがある場合、それらのボリュームにも該当するクライアント用のポリシーを作成し、 Superuser を SYS または ANY に設定する必要があります。
+
++
+ほとんどの場合、ルートボリュームで使用するポリシーのポリシー名は default です。
+
++
+ポリシーへの変更は、ルートボリュームだけでなく、そのポリシーを使用するすべてのボリュームに適用されます。
+
+
+
+. vStorage 機能を有効にします。「 nfs modify -vserver vserver_name vmware-vstorage enabled
++
+SVM で NFS サービスを利用するためには、 vStorage 機能を有効にする必要があります。
+
+. vStorage 機能が有効になっていることを確認します。
++
+「 nfs show -fields vstorage 」
+
++
+出力には「 enabled 」と表示されます。
+
++
+[listing]
+----
+cm3240c-rtp::> nfs show -fields vstorage
+vserver vstorage
+------- --------
+vmware  enabled
+----
+. エクスポートポリシーを作成します。
++
+vserver export-policy rule create 」を参照してください
+
++
+以下は、エクスポートポリシールールを作成するコマンド例です。
+
++
+[listing]
+----
+User1-vserver2::> protocol export-policy rule create -vserver vs1
+-policyname default -clientmatch 0.0.0.0/0 -rorule any -rwrule any -superuser
+any -anon 0
+
+User1-vserver2::> export-policy rule show vserver export-policy rule show)
+Virtual      Policy          Rule    Access   Client                RO
+Server       Name            Index   Protocol Match                 Rule
+------------ --------------- ------  -------- --------------------- ---------
+vs1          default         1       any      0.0.0.0/0             any
+
+User1-vserver2::>
+----
+. エクスポートポリシーを表示します。
++
+vserver export-policy show には
+
++
+次のコマンドは、エクスポートポリシーを表示します。
+
++
+[listing]
+----
+User1-vserver2::> export-policy show (vserver export-policy show)
+Virtual Server   Policy Name
+---------------  -------------------
+vs1              default
+----
+
