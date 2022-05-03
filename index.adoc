@@ -5,6 +5,7 @@ keywords: installation, guide, nfs, vaai, vmware, esxi, plug-in
 summary: ESXi ホストにインストールされた VMware 仮想ディスクライブラリを統合するソフトウェアライブラリ。 
 ---
 = NetApp NFS Plug-in for VMware VAAI のドキュメント
+:allow-uri-read: 
 :icons: font
 :imagesdir: ./media/
 

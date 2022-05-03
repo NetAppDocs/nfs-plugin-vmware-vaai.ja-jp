@@ -5,6 +5,7 @@ keywords: configure, export, policies, policy, compliance, vmware, vstorage, api
 summary: NFS サーバ経由の VMware vStorage APIs for Array Integration （ VAAI ）のストレージ機能をネットアップのストレージで使用できるようにするためには、エクスポートポリシーを設定する必要があります。ONTAP では、 Storage Virtual Machine （ SVM 、旧 Vserver ）に適用されているエクスポートポリシーによってボリュームエクスポートが制限されます。 
 ---
 = ONTAP で NFS 経由の VAAI を許可するエクスポートポリシーを設定します
+:allow-uri-read: 
 :icons: font
 :imagesdir: ./media/
 
