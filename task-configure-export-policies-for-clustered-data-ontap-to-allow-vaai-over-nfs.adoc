@@ -20,6 +20,7 @@ NFS サーバ経由の VMware vStorage APIs for Array Integration （ VAAI ）�
 * 該当する NFS サーバで VAAI をサポートするオプションが設定されている必要があります。
 
 
+.このタスクについて
 エクスポートポリシーは、状況やプロトコルに応じて複数設定することができます。
 
 .手順

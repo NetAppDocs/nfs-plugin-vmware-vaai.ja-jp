@@ -22,15 +22,15 @@ NOTE: NFSv4.1 は ONTAP 9.0 のシステムでのみ使用でき、 NFSv3 は 7-
 * VMware vSphere 7.0U1 が使用可能である必要があります。
 
 
-NFS の有効化と VMware vSphere の使用については、に記載されているマニュアルを参照してください追加情報 ,手順 10。
+NFS の有効化と VMware vSphere の使用については、に記載されているマニュアルを参照してください追加情報 <<step10,手順 10>>。
 
 .このタスクについて
-* VMware ESXi CLI を使用してプラグインをインストールする場合は、から始めてください ,手順 1.。
-* Virtual Storage Console for VMware vSphere （ VSC ）を使用してプラグインをインストールする場合は、から始めてください ,手順 3。
+* VMware ESXi CLI を使用してプラグインをインストールする場合は、から始めてください <<step1,手順 1.>>。
+* Virtual Storage Console for VMware vSphere （ VSC ）を使用してプラグインをインストールする場合は、から始めてください <<step3,手順 3>>。
 +
-VSC を使用すると、ストレージコントローラで VMware vStorage for NFS が有効になり、 ESXi ホストで VAAI を有効にする手順を次に示します ,1. から ,2. を使用してください。手順
+VSC を使用すると、ストレージコントローラで VMware vStorage for NFS が有効になり、 ESXi ホストで VAAI を有効にする手順を次に示します <<step1,1.>> から <<step2,2.>> を使用してください。手順
 
-* VMware vSphere 用の ONTAP ツールを使用してプラグインをインストールする場合は、から始めてください ,手順 3。
+* VMware vSphere 用の ONTAP ツールを使用してプラグインをインストールする場合は、から始めてください <<step3,手順 3>>。
 
 
 * 使用する IP アドレスの表記規則： *
@@ -415,6 +415,7 @@ https://library.netapp.com/ecm/ecm_download_file/ECMP1401220["『 Data ONTAP 8.2
 
 
 
+.完了後
 NFS Plug-in のスペースリザベーションやコピーオフロードの機能を使用することで、日常的な作業を効率化することができます。
 
 * ネットアップのトラディショナルボリュームや FlexVol ボリュームにシック仮想マシンディスク（ VMDK ）形式の仮想マシンを作成し、作成時にファイルのスペースを確保します。
