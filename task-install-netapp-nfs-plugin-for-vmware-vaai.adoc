@@ -125,19 +125,58 @@ vSphere Client の各機能を使用
 .. 2.0 および vSphere 7.0U1 以降の最新のソフトウェアリリースをダウンロードします。
 
 
-. 次のコマンドを使用して、 ESXi ホストにプラグインをインストールします。
+. 署名済みイメージと公開鍵を使用してバイナリを確認します。
 +
-esxcli software component apply -d /<tmp>/< 一部のパス >/< ダウンロードプラグインファイルバージョン >.zip
+.. に次のzipファイルをダウンロードします `/tmp` フォルダ：
++
+`NetAppNasPlugin-<version>.Signed.zip`
 
 +
-ここで '<se_path>` はダウンロードしたファイルの場所へのパスで '<downloaded-plugin-file-version >' はダウンロードしたファイルの名前です
+このzipには次のファイルが含まれています。
 
-. 次のコマンドを実行してインストールを完了します。
++
+*** `NetAppNasPlugin-<version>.zip`
+*** `NetAppNasPlugin-<version>.zip.sig`
+*** `csc-prod-CFSG-NFS-Plugin.pem`
+
+
+.. 次のコマンドを使用して、証明書チェーンから公開鍵を取得します。
++
+`openssl x509 -in csc-prod-CFSG-NFS-Plugin.pem -pubkey -noout > csc-prod-CFSG-NFS-Plugin.pub`
+
++
+*** `csc-prod-CFSG-NFS-Plugin.pem` には、証明書チェーンが含まれています `NetAppNasPlugin-<version>.Signed.zip`
+*** `csc-prod-CFSG-NFS-Plugin.pub` は公開鍵です
+
+
+.. 公開鍵を使用して署名済みイメージを確認します。
++
+`openssl dgst -sha256 -verify csc-prod-CFSG-NFS-Plugin.pub -signature /tmp/ NetAppNasPlugin-<version>.zip.sig  /tmp/NetAppNasPlugin-<version>.zip`
+
++
+検証に成功すると、次の出力が表示されます。
+
++
+[listing]
+----
+Verified OK
+----
+
+
+. 次のコマンドを実行して、ESXiホストにプラグインをインストールします。
++
+/etc/init.d/VAAI-NASD STOP
+
++
+`esxcli software component apply -d   /tmp/<some_path>/NetAppNasPlugin-<version>.zip`
+
 +
 /etc/init.d/VAAI-NASD start
 
 +
-/etc/init.d/VAAI-NASD STOP
+** `<some_path>` は、ダウンロードしたファイルの場所へのパスです
+** `NetAppNasPlugin-<version>.zip` ダウンロードしたzipに含まれています
+
 
 . VMware ESXi コマンドラインで、ホストにプラグインが正しくインストールされたことを確認します。
 +
