@@ -20,4 +20,4 @@ sidebar:
     - title: ONTAP で NFS 経由の VAAI を許可するエクスポートポリシーを設定します
       url: "/task-configure-export-policies-for-clustered-data-ontap-to-allow-vaai-over-nfs.html"
   - title: 法的通知
-    url: "/reference-legal-notices.html"
+    url: "/legal-notices.html"
